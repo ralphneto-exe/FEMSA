@@ -77,15 +77,20 @@ def grafico_projeções_plotly(df, titulo):
 
     fig.add_trace(go.Scatter(
         x=df_plot["Produto"], y=df_produtos[col_valor_real],
-        name="Volume real", yaxis="y2", mode="lines+markers", line=dict(dash="dot", color="#444")
+        name="Volume real", yaxis="y2", mode="lines+markers", line=dict(dash="dot", color="#888")
     ))
-    fig.add_hline(y=100, line_dash="solid", line_color="black", line_width=2)
+    
+    # Linha de 100% em cinza para funcionar no claro e escuro
+    fig.add_hline(y=100, line_dash="solid", line_color="gray", line_width=2)
+    
     fig.update_layout(
         title=titulo, height=400, barmode="group",
-        yaxis=dict(title="Índice %", range=[0, 180]),
-        yaxis2=dict(title="Volume Real", overlaying="y", side="right"),
+        yaxis=dict(title="Índice %", range=[0, 180], gridcolor="rgba(128,128,128,0.2)"),
+        yaxis2=dict(title="Volume Real", overlaying="y", side="right", showgrid=False),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        plot_bgcolor="white",
+        # Transparência para adaptação de tema
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
         hovermode="x unified",
         bargap=0.15
     )
@@ -123,7 +128,13 @@ if uploaded_file:
             st.markdown(f"### Mix de Volume ({ultimo_p})")
             fig_mix = px.pie(df_pizza, values=col_valor_real, names='Produto', hole=0.5, color_discrete_sequence=cores_vermelho_mix)
             fig_mix.update_traces(textposition='inside', textinfo='percent+label')
-            fig_mix.update_layout(margin=dict(t=30, b=10, l=10, r=10), height=350, showlegend=False)
+            fig_mix.update_layout(
+                margin=dict(t=30, b=10, l=10, r=10), 
+                height=350, 
+                showlegend=False,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)"
+            )
             st.plotly_chart(fig_mix, use_container_width=True)
 
         with cols_top[1].container(border=True):
@@ -155,12 +166,11 @@ if uploaded_file:
             erro_medio = df_card['Erro_Percentual'].mean()
             
             with cols_detail[i % 4].container(border=True):
-                # Usando Metric para destaque rápido
                 st.metric(
                     label=f"Avg Error: {produto}", 
                     value=f"{erro_medio:.1f}%",
                     delta=f"{df_card.iloc[-1]['Erro_Percentual']:.1f}% (S4)",
-                    delta_color="inverse" # Vermelho se positivo (erro pra cima)
+                    delta_color="inverse" 
                 )
                 
                 c_err = alt.Chart(df_card).mark_bar().encode(
@@ -174,7 +184,8 @@ if uploaded_file:
                     tooltip=[alt.Tooltip('Erro_Percentual:Q', format='.1f', title='Erro %')]
                 ).properties(height=120)
                 
-                linha_zero = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='black').encode(y='y')
+                # Regra do zero adaptável
+                linha_zero = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='gray').encode(y='y')
                 st.altair_chart(c_err + linha_zero, use_container_width=True)
 
         # --- PÁGINA 2: ESTUDO DE PRECISÃO ---
@@ -193,11 +204,17 @@ if uploaded_file:
                     total_val = df_mes_total.iloc[0]
                     v_total = [(total_val[s] / total_val[col_valor_real] * 100) if total_val[col_valor_real] != 0 else 0 for s in semanas]
                     fig_t = go.Figure(go.Bar(x=semanas, y=v_total, marker_color=lista_vermelhos))
-                    fig_t.add_hline(y=100, line_dash="solid", line_color="black")
-                    fig_t.update_layout(title="Média do Mês", yaxis=dict(range=[0, 150]), height=400, plot_bgcolor="white")
+                    
+                    fig_t.add_hline(y=100, line_dash="solid", line_color="gray")
+                    fig_t.update_layout(
+                        title="Média do Mês", 
+                        yaxis=dict(range=[0, 150], gridcolor="rgba(128,128,128,0.2)"), 
+                        height=400, 
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        paper_bgcolor="rgba(0,0,0,0)"
+                    )
                     col_b.plotly_chart(fig_t, use_container_width=True)
                 
-                # Dados brutos para conferência rápida
                 if st.checkbox(f"Mostrar dados brutos - {periodo}", key=f"check_{periodo}"):
                     st.dataframe(df_mes.drop(columns=['Data_Ref']), use_container_width=True)
 
